@@ -34,6 +34,22 @@ sockaddr_in value_to_addr(Local<Context> context, Local<Value> orgv){
   return sockaddr;;
 }
 
+void error_handle(const char *e){
+    perror(e);
+}
+
+void judge_fn_result(int r, const char *e){
+#ifdef SOCKET_OS_WIN
+    if(r == SOCKET_ERROR){
+        error_handle(e);
+    }
+#else
+    if(r < 0){
+       error_handle(e);
+    }
+#endif
+}
+
 void Socket(const FunctionCallbackInfo<Value>& args) {
   // 检查传入的参数的个数。
   if (args.Length() < 3) {
@@ -50,8 +66,9 @@ void Socket(const FunctionCallbackInfo<Value>& args) {
 
   //定义sockfd AF_INET（IPv4） AF_INET6（IPv6） AF_LOCAL（UNIX协议） AF_ROUTE（路由套接字） AF_KEY（秘钥套接字）
   // SOCK_STREAM（字节流套接字） SOCK_DGRAM
-  SOCKET_T fd = socket(args[0].As<Number>()->Value(), args[1].As<Number>()->Value(), htons(args[2].As<Number>()->Value()));
+  int fd = socket(args[0].As<Number>()->Value(), args[1].As<Number>()->Value(), htons(args[2].As<Number>()->Value()));
 
+  printf("fd:%d",fd);
   if(fd < 0) {
       perror("socket error");
   }
@@ -81,12 +98,12 @@ void Bind(const FunctionCallbackInfo<Value>& args) {
 
   int id = args[0].As<Integer>()->Value();
 
+  printf("bind fd:%d",id);
+
   // bind，成功返回0，出错返回-1
   int result = bind(id,(struct sockaddr *)&server_sockaddr,sizeof(server_sockaddr));
 
-  if(result < 0) {
-      perror("bind error");
-  }
+  judge_fn_result(result, "bind error");
   args.GetReturnValue().Set(Nan::New(result));
 }
 
@@ -110,10 +127,7 @@ void Listen(const FunctionCallbackInfo<Value>& args) {
 
   int result = listen(fd, qu);
 
-  if(result < 0) {
-      perror("listen error");
-  }
-
+  judge_fn_result(result, "listen error");
   args.GetReturnValue().Set(Nan::New(result));
 }
 
@@ -200,7 +214,7 @@ void Recvfrom(const FunctionCallbackInfo<Value>& args) {
   }
 
   int fd = args[0].As<Integer>()->Value();
-  unsigned char* buffer = (unsigned char*) node::Buffer::Data(args[1]->ToObject(context).ToLocalChecked());
+  char* buffer = (char*) node::Buffer::Data(args[1]->ToObject(context).ToLocalChecked());
   int buflen = args[2].As<Integer>()->Value();
   int flag = args[3].As<Integer>()->Value();
 
@@ -442,8 +456,58 @@ void Getpeername(const FunctionCallbackInfo<Value>& args) {
 }
 
 
+#ifdef SOCKET_OS_WIN
+#define OS_INIT_DEFINED
+
+/* Additional initialization and cleanup for Windows */
+
+static void
+os_cleanup(void)
+{
+    WSACleanup();
+}
+
+static int
+os_init(void)
+{
+    WSADATA WSAData;
+    int ret;
+    ret = WSAStartup(0x0101, &WSAData);
+    switch (ret) {
+    case 0:     /* No error */
+        // Py_AtExit(os_cleanup);
+        return 1; /* Success */
+    case WSASYSNOTREADY:
+         perror("WSAStartup failed: network not ready");
+        break;
+    case WSAVERNOTSUPPORTED:
+    case WSAEINVAL:
+        perror("WSAStartup failed: requested version not supported");
+        break;
+    default:
+        perror("WSAStartup failed: error code %d");
+        break;
+    }
+    return 0; /* Failure */
+}
+
+#endif /* MS_WINDOWS */
+
+
+
+#ifndef OS_INIT_DEFINED
+static int
+os_init(void)
+{
+    return 1; /* Success */
+}
+#endif
+
+
 
 void Initialize(Local<Object> exports) {
+  os_init();
+
   Nan::SetMethod(exports, "socket", Socket);
   Nan::SetMethod(exports, "bind", Bind);
   Nan::SetMethod(exports, "listen", Listen);
@@ -1213,16 +1277,16 @@ void Initialize(Local<Object> exports) {
 #endif
 
     /* Some reserved IP v.4 addresses */
-#ifdef  INADDR_ANY
-    NODE_SOCKET_SET_MACRO(exports, INADDR_ANY);
-#else
-    NODE_SOCKET_SET_CONSTANT(exports, "INADDR_ANY", 0x00000000);
-#endif
-#ifdef  INADDR_BROADCAST
-    NODE_SOCKET_SET_MACRO(exports, INADDR_BROADCAST);
-#else
-    NODE_SOCKET_SET_CONSTANT(exports, "INADDR_BROADCAST", 0xffffffff);
-#endif
+// #ifdef  INADDR_ANY
+//     NODE_SOCKET_SET_MACRO(exports, INADDR_ANY);
+// #else
+//     NODE_SOCKET_SET_CONSTANT(exports, "INADDR_ANY", 0x00000000);
+// #endif
+// #ifdef  INADDR_BROADCAST
+//     NODE_SOCKET_SET_MACRO(exports, INADDR_BROADCAST);
+// #else
+//     NODE_SOCKET_SET_CONSTANT(exports, "INADDR_BROADCAST", 0xffffffff);
+// #endif
 #ifdef  INADDR_LOOPBACK
     NODE_SOCKET_SET_MACRO(exports, INADDR_LOOPBACK);
 #else

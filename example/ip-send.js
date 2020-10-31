@@ -1,4 +1,4 @@
-const socket = require('./lib/socket');
+const socket = require('../lib/socket');
 
 const fd = socket.socket(socket.ProtocolFamily.AF_INET, socket.types.SOCK_RAW, 17);
 

@@ -1,12 +1,14 @@
-const socket = require('./lib/socket');
+const socket = require('../lib/socket');
 
-const fd = socket.socket(socket.ProtocolFamily.AF_INET, socket.types.SOCK_DGRAM,0);
+console.log(socket.AF_INET, socket.SOCK_DGRAM);
+
+const fd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,0);
 
 if(fd < -1){
   return;
 }
 
-const addr = {sin_family: 2, sin_port: 8888, s_addr: 0xc0a81f33};
+const addr = {sin_family: 2, sin_port: 8888, s_addr: 0xc0a81ffb};
 
 setTimeout(() => {
   const bf = new Uint8Array(100).fill(73);

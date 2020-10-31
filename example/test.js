@@ -1,12 +1,9 @@
-// hello.js
-const addon = require('./lib/socket');
-
-
-// console.log();
+const addon = require('../lib/socket');
 const fd = addon.socket(2,1, 0);
+
 process.on('beforeExit', () => {
   console.log('on exit');
-  addon.close("fd:",fd);
+  addon.close(fd);
 });
 process.on('exit', () => {
   console.log('on exit');
@@ -14,7 +11,7 @@ process.on('exit', () => {
 });
 console.log(fd);
 
-const a = addon.bind(fd, {sin_family: 2, sin_port: 8890, sin_addr: 0xc0a81f58});
+const a = addon.bind(fd, {sin_family: 2, sin_port: 8890, sin_addr: 0x7f000001});
 console.log(`bind: ${a} `)
 const b = addon.listen(fd, 1);
 console.log(`listen: ${b} `)
@@ -33,7 +30,7 @@ const server = () => {
       break;
     }
     console.log(d);
-    console.log(String.fromCharCode(...bf));
+    console.log(String.fromCharCode(...bf.slice(0,d)))
   }
 }
 

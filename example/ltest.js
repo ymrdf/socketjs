@@ -1,1 +1,1 @@
-const socket = require('./lib/socket');
+const socket = require('../lib/socket');

@@ -1,24 +1,6 @@
 
-// const socket = require('./lib/socket');
 
-// console.log(socket.AF_INET, socket.SOCK_RAW);
-
-// const fd = socket.socket(2, 3, 0);
-
-// console.log("socket", fd);
-
-// const addr = {sin_family: 2, sin_port: 8889, s_addr: 0x00000000};
-// const addr2 = {sin_family: 2, sin_port: 8887, s_addr: 0x00000000};
-
-// const ss = socket.bind(fd, addr);
-// console.log('bind',ss);
-// const aa = socket.setsockopt(fd, socket.sockoptLevels.IPPROTO_IP, socket.sockopts.IP_HDRINCL, 1);
-// console.log('set', aa);
-// const bf = new Uint8Array(100);
-// const fr = socket.recvfrom(fd, bf, 100, 0, addr2);
-// console.log(String.fromCharCode(...bf));
-
-const socket = require('./lib/socket');
+const socket = require('../lib/socket');
 
 const fd = socket.socket(socket.ProtocolFamily.AF_INET, socket.types.SOCK_RAW,6);
 
