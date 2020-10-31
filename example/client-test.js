@@ -18,12 +18,12 @@ const rl = readline.createInterface({
 const addon = require('../lib/socket');
 
 const fd = addon.socket(2,1,0);
-const a = addon.connect(fd, {sin_family: 2, sin_port: 8890, sin_addr: 0x7f000001});
+const a = addon.connect(fd, {sin_family: 2, sin_port: 8890, s_addr: 0x7f000001});
 
 console.log("connect result: ", fd , "  ", a);
 const send = (response) => {
   const bf = stringToUint8Array(response);
-  addon.send(fd, bf, bf.length, 0);
+  addon.send(fd, bf.buffer, bf.length, 0);
 }
 
 const read = () => {
