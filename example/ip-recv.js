@@ -22,7 +22,7 @@ console.log('set opt:', aa);
 
 while(1){
   const bf = new Uint8Array(100);
-  const len = socket.recvfrom(fd, bf, 100, 0, addr);
+  const len = socket.recvfrom(fd, bf.buffer, 100, 0, addr);
   const bf2 = [];
   console.log(bf);
   bf.forEach(i => bf2.push(i.toString(2)));

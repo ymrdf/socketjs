@@ -8,11 +8,11 @@ if(fd < -1){
   return;
 }
 
-const addr = {sin_family: 2, sin_port: 8888, s_addr: 0xc0a81ffb};
+const addr = {sin_family: 2, sin_port: 8888, s_addr: 0xc0a81f58};
 
 setTimeout(() => {
   const bf = new Uint8Array(100).fill(73);
-  socket.sendto(fd, bf, 100, 0, addr);
+  socket.sendto(fd, bf.buffer, 100, 0, addr);
 
 },1000)
 
