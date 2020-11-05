@@ -266,7 +266,12 @@ Napi::Value Accept(const Napi::CallbackInfo& args) {
 
     judge_fn_result(env, result, "bind error");
 
-    return Napi::Number::New(env, result);
+    Napi::Object res = Napi::Object::New(env);
+    
+    res.Set(Napi::String::New(env, "fd"), Napi::Number::New(env, result));
+    res.Set(Napi::String::New(env, "addr"), addr_to_value(env, client_addr ));
+
+    return res;
 }
 
 
@@ -1466,16 +1471,16 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 #endif
 
     /* Some reserved IP v.4 addresses */
-// #ifdef  INADDR_ANY
-//     NODE_SOCKET_SET_MACRO(env, exports, INADDR_ANY);
-// #else
-//     NODE_SOCKET_SET_CONSTANT(exports, "INADDR_ANY", 0x00000000);
-// #endif
-// #ifdef  INADDR_BROADCAST
-//     NODE_SOCKET_SET_MACRO(env, exports, INADDR_BROADCAST);
-// #else
-//     NODE_SOCKET_SET_CONSTANT(exports, "INADDR_BROADCAST", 0xffffffff);
-// #endif
+#ifdef  INADDR_ANY
+    NODE_SOCKET_SET_MACRO(env, exports, INADDR_ANY);
+#else
+    NODE_SOCKET_SET_CONSTANT(exports, "INADDR_ANY", 0x00000000);
+#endif
+#ifdef  INADDR_BROADCAST
+    NODE_SOCKET_SET_MACRO(env, exports, INADDR_BROADCAST);
+#else
+    NODE_SOCKET_SET_CONSTANT(exports, "INADDR_BROADCAST", 0xffffffff);
+#endif
 #ifdef  INADDR_LOOPBACK
     NODE_SOCKET_SET_MACRO(env, exports, INADDR_LOOPBACK);
 #else
