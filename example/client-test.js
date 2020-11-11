@@ -15,19 +15,18 @@ const rl = readline.createInterface({
 });
 
 
-const addon = require('../lib/socket');
+const socket = require('../lib/socket');
 
-const fd = addon.socket(2,1,0);
-const a = addon.connect(fd, {sin_family: 2, sin_port: 8890, s_addr: 0x7f000001});
+const client = socket.socket(socket.AF_INET,socket.SOCK_STREAM, 0);
+const connectResult = client.connect({port: 8881, address:'192.168.31.88' });
 
-console.log("connect result: ", fd , "  ", a);
 const send = (response) => {
   const bf = stringToUint8Array(response);
-  addon.send(fd, bf.buffer, bf.length, 0);
+  client.send(bf, bf.length);
 }
 
 const read = () => {
-  rl.question('你如何看待 Node.js 中文网？', (answer, a ,b ) => {
+  rl.question('client>:', (answer ) => {
     send(answer);
     read();
   });

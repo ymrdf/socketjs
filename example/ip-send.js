@@ -1,40 +1,37 @@
 const socket = require('../lib/socket');
 
-const fd = socket.socket(socket.ProtocolFamily.AF_INET, socket.types.SOCK_RAW, 17);
-
-if(fd < -1){
-  return;
-}
+const cSocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP);
 
 const addr = {sin_family: 2, sin_port: 8889, sin_addr: 0xc0a81f58};
 
 
-const aa = socket.setsockopt(fd, socket.sockoptLevels.IPPROTO_IP, socket.sockopts.IP_HDRINCL, 1);
-// console.log(aa);
-// const bf = new Uint8Array([
-//   69,   0, 64,  0, 113, 74,   0,  0, 64,  1,  11, 93,
-//  127,   0,  0,  1, 127,  0,   0,  1,  0,  0, 126, 56,
-//   92, 225,  0,  1,  95, 47, 238, 81,  0,  1, 236, 95,
-//    8,   9, 10, 11,  12, 13,  14, 15, 16, 17,  18, 19,
-//   20,  21, 22, 23,  24, 25,  26, 27, 28, 29,  30, 31,
-//   32,  33, 34, 35,  36, 37,  38, 39, 40, 41,  42, 43,
-//   44,  45, 46, 47,  48, 49,  50, 51, 52, 53,  54, 55,
-//    0,   0,  0,  0,   0,  0,   0,  0,  0,  0,   0,  0,
-//    0,   0,  0,  0
-// ]);
-const bf = new Uint8Array(  [
-  69,   0, 64,  0, 100, 183,  0,  0, 64,  1,  85, 241,
- 192, 168, 31, 88, 192, 168, 31, 88,  0,  0,  73,  25,
- 178, 232,  0,  3,  95,  48,  8, 73,  0, 13, 177, 113,
-   8,   9, 10, 11,  12,  13, 14, 15, 16, 17,  18,  19,
-  20,  21, 22, 23,  24,  25, 26, 27, 28, 29,  30,  31,
-  32,  33, 34, 35,  36,  37, 38, 39, 40, 41,  42,  43,
-  44,  45, 46, 47,  48,  49, 50, 51, 52, 53,  54,  55,
-   0,   0,  0,  0,   0,   0,  0,  0,  0,  0,   0,   0,
-   0,   0,  0,  0
-]);
-console.log(bf);
-// const bf = new Uint8Array(100).fill(73);
-const len = socket.sendto(fd, bf, bf.length, 0, addr);
+const res = cSocket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1);
+
+console.log(res);
+
+const bf = new Uint8Array([
+  0x45,0xc0,0x28,0x00,
+  0x35,0x2d,0x00,0x00,
+  0x40,0x01,0x85,0x2a,
+  0xc0,0xa8,0x1f,0x58,
+  0xc0,0xa8,0x1f,0x58,
+  0x03,0x03,0xbc,0xc4,
+  0x00,0x00,0x00,0x00,
+  0x45,0x00,0x20,0x00,
+  0xd2,0x20,0x00,0x00,
+  0x40,0x11,0xe9,0x02,
+  0xc0,0xa8,0x1f,0x58,
+  0xc0,0xa8,0x1f,0x01,
+  0xc7,0x84,0x00,0xc0,
+  0x00,0x0c,0x64,0xd6,
+  0x10,0x01,0x03,0x10,
+  0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00
+])
+
+const len = cSocket.sendto({address:'192.168.31.88', port: 8888}, bf);
 console.log(len);
 

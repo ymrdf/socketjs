@@ -1,40 +1,48 @@
-const addon = require('../lib/socket');
+const socket = require('../lib/socket');
 
-const fd = addon.socket(2,1, 0);
+const server = socket.socket(socket.AF_INET,socket.SOCK_STREAM, 0);
 
 process.on('beforeExit', () => {
   console.log('on exit');
-  addon.close(fd);
-});
-process.on('exit', () => {
-  console.log('on exit');
+  server.close();
 });
 
-addon.bind(fd, {sin_family: 2, sin_port: 8890, s_addr: 0x00000000});
-addon.listen(fd, 1);
+server.bind(8881);
 
-const server = () => {
-  addon.asyncAccept(fd, (e,c) =>{
-    
-    if(e){
-      console.log('async accept error:', e);
-      return;
+const result = server.listen();
+
+while(result){
+  const client = server.accept();
+  while(client){
+    const buffer = client.recv(200);
+    if(buffer){
+      console.log(String.fromCharCode(...buffer))
+    }else{
+      break;
     }
-
-    const bf = new Uint8Array(100);
-
-    addon.asyncRecv(c, bf.buffer, 100, 0, (err,len ) => {
-      if(len<=0 || err) {
-        addon.close(c);
-        return;
-      }
-      console.log(String.fromCharCode(...bf.slice(0,len)))
-    })
-
-  });
-
-  console.log('end');
+  }
 
 }
 
-server();
+// const server = () => {
+//   addon.asyncAccept(fd, (e,c) =>{
+    
+//     if(e){
+//       console.log('async accept error:', e);
+//       return;
+//     }
+
+//     const bf = new Uint8Array(100);
+
+//     addon.asyncRecv(c, bf.buffer, 100, 0, (err,len ) => {
+//       if(len<=0 || err) {
+//         addon.close(c);
+//         return;
+//       }
+//       console.log(String.fromCharCode(...bf.slice(0,len)))
+//     })
+
+//   });
+
+//   console.log('end');
+// }
