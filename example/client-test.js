@@ -18,7 +18,7 @@ const rl = readline.createInterface({
 const socket = require('../lib/socket');
 
 const client = socket.socket(socket.AF_INET,socket.SOCK_STREAM, 0);
-const connectResult = client.connect({port: 8881, address:'192.168.31.88' });
+const connectResult = client.connect({port: 8881, address:'192.168.31.51' });
 
 const send = (response) => {
   const bf = stringToUint8Array(response);
