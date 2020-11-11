@@ -34,11 +34,8 @@ sockaddr_in value_to_addr(Napi::Value orgv){
 }
 
 Napi::Object addr_to_value(Napi::Env env, sockaddr_in sockaddr){
-    printf(">5.1<");
     Napi::Object result = Napi::Object::New(env);
-    printf(">5.2<");
     result.Set(Napi::String::New(env, "sin_family"),Napi::Number::New(env, sockaddr.sin_family));
-    printf(">5.3<");
     result.Set(Napi::String::New(env, "sin_port"),Napi::Number::New(env, ntohs(sockaddr.sin_port)));
     result.Set(Napi::String::New(env, "s_addr"),Napi::Number::New(env, ntohl(sockaddr.sin_addr.s_addr)));
     return result;
@@ -131,20 +128,15 @@ public:
     
         long len = recvfrom(n_, buffer_, buflen_, flag_, (struct sockaddr *)&from_addr, &length);
 
-        // printf("%d;%d;%d;", buffer[80], buffer[90], buffer[95]);
         from_addr_ = from_addr;
         len_ = len;
     }
 
     void OnOK() override {
-        // printf("%d;%d;%d;", buffer_[80], buffer_[90], buffer_[95]);
-        // memcpy(buffer, buffer_, len_);
-        // printf("%d;%d;%d;", buffer[80], buffer[90], buffer[95]);
 
         Napi::Object res = Napi::Object::New(Env());
         
         res.Set(Napi::String::New(Env(), "length"), Napi::Number::New(Env(), len_));
-        // res.Set(Napi::String::New(Env(), "buffer"), buf);
         res.Set(Napi::String::New(Env(), "fromAddr"), addr_to_value(Env(), from_addr_ ));
 
         Callback().Call({Env().Null(),  res});
@@ -227,9 +219,9 @@ Napi::Value Listen(const Napi::CallbackInfo& args) {
     }
 
     int fd = args[0].As<Napi::Number>().Int32Value();
-    int qu = args[1].As<Napi::Number>().Int32Value();
+    int backlog = args[1].As<Napi::Number>().Int32Value();
 
-    int result = listen(fd, qu);
+    int result = listen(fd, backlog);
 
     judge_fn_result(env, result, "listen error");
     return Napi::Number::New(env, result);
@@ -360,8 +352,8 @@ Napi::Value AsyncRecv(const Napi::CallbackInfo& args) {
 Napi::Value Recvfrom(const Napi::CallbackInfo& args) {
     Napi::Env env = args.Env();
 
-    if (args.Length() < 5) {
-        Napi::TypeError::New(env, "Expected five arguments")
+    if (args.Length() < 4) {
+        Napi::TypeError::New(env, "Expected four arguments")
                 .ThrowAsJavaScriptException();
         return env.Null();
     }
@@ -378,16 +370,21 @@ Napi::Value Recvfrom(const Napi::CallbackInfo& args) {
 
 
     Napi::ArrayBuffer buf = args[1].As<Napi::ArrayBuffer>();
-
     char* buffer = reinterpret_cast<char*>(buf.Data());
 
-    struct sockaddr_in from_addr =  value_to_addr(args[4]);
+
+    struct sockaddr_in from_addr;
 
     socklen_t length = sizeof(from_addr);
  
     long len = recvfrom(fd, buffer, buflen, flag, (struct sockaddr *)&from_addr, &length);
 
-    return Napi::Number::New(env, len);
+    Napi::Object res = Napi::Object::New(env);
+    res.Set(Napi::String::New(env, "length"), Napi::Number::New(env, len));
+    res.Set(Napi::String::New(env, "buffer"), buf);
+    res.Set(Napi::String::New(env, "fromAddr"), addr_to_value(env, from_addr ));
+
+    return res;
 }
 
 Napi::Value AsyncRecvfrom(const Napi::CallbackInfo& args) {
@@ -483,43 +480,8 @@ Napi::Value Send(const Napi::CallbackInfo& args) {
     return Napi::Number::New(env, result);
 }
 
-Napi::Value Setsockopt(const Napi::CallbackInfo& args) {
+Napi::Value Connect(const Napi::CallbackInfo& args) {
     Napi::Env env = args.Env();
-
-    if (args.Length() < 3) {
-        Napi::TypeError::New(env, "Expected tree arguments")
-                    .ThrowAsJavaScriptException();
-            return env.Null();
-    }
-
-    if (!args[0].IsNumber() || !args[1].IsNumber() || !args[2].IsNumber() ) {
-                    Napi::TypeError::New(env, "Supplied arguments should be: integer, uint8array, integer")
-                    .ThrowAsJavaScriptException();
-            return env.Null();
-    }
-  
-    int fd = args[0].As<Napi::Number>().Int32Value();
-    int level = args[1].As<Napi::Number>().Int32Value();
-    int optname = args[2].As<Napi::Number>().Int32Value();
-
-    int result = -1;
-
-    if(args[3].IsNumber()){
-        int optval = args[3].As<Napi::Number>().Int32Value();
-        result = setsockopt(fd, level, optname, (char *)& optval, sizeof(optval));
-    }else{
-        Napi::ArrayBuffer buf = args[3].As<Napi::ArrayBuffer>();
-        char* buffer = reinterpret_cast<char*>(buf.Data());
-        result = setsockopt(fd, level, optname, buffer, sizeof(buffer));
-    }
-
-    judge_fn_result(env, result, "setsockopt error");
-
-    return Napi::Number::New(env, result);
-    }
-
-    Napi::Value Connect(const Napi::CallbackInfo& args) {
-        Napi::Env env = args.Env();
 
     if (args.Length() < 2) {
         Napi::TypeError::New(env, "Expected two arguments")
@@ -540,8 +502,10 @@ Napi::Value Setsockopt(const Napi::CallbackInfo& args) {
     int result = connect(id,(struct sockaddr *)&server_sockaddr,sizeof(server_sockaddr));
 
     judge_fn_result(env, result, "connect error");
-        return Napi::Number::New(env, result);
+    
+    return Napi::Number::New(env, result);
 }
+
 
 Napi::Value Close(const Napi::CallbackInfo& args) {
     Napi::Env env = args.Env();
@@ -568,59 +532,171 @@ Napi::Value Close(const Napi::CallbackInfo& args) {
 }
 
 
-
-Napi::Value Getsockname(const Napi::CallbackInfo& args) {
-      Napi::Env env = args.Env();
+Napi::Value Shutdown(const Napi::CallbackInfo& args) {
+    Napi::Env env = args.Env();
 
     if (args.Length() < 2) {
-        Napi::TypeError::New(env, "Expected two arguments")
-            .ThrowAsJavaScriptException();
+        Napi::TypeError::New(env, "Expected just two argument")
+                .ThrowAsJavaScriptException();
         return env.Null();
     }
 
-    if (!args[0].IsNumber() || !args[1].IsObject()) {
-        Napi::TypeError::New(env, "Supplied arguments should be: integer, object")
-            .ThrowAsJavaScriptException();
+    // 检查参数的类型。
+    if (!args[0].IsNumber() || !args[1].IsNumber()) {
+        Napi::TypeError::New(env, "Supplied argument should be: integer, integer ").ThrowAsJavaScriptException();
         return env.Null();
     }
 
-    struct sockaddr_in server_sockaddr =  value_to_addr(args[1]);
+    int fd = args[0].As<Napi::Number>().Int32Value();
+    int type = args[1].As<Napi::Number>().Int32Value();
 
-    int id = args[0].As<Napi::Number>().Int32Value();
-    socklen_t len = args[2].As<Napi::Number>().Int32Value();
+    int result = shutdown(fd, type);
 
-    int result = getsockname(id,(struct sockaddr *)&server_sockaddr, &len);
-
-    judge_fn_result(env, result, "getsockname error");
+    judge_fn_result(env, result, "shutdown error");
 
     return Napi::Number::New(env, result);
+}
+
+
+Napi::Value Setsockopt(const Napi::CallbackInfo& args) {
+    Napi::Env env = args.Env();
+
+    if (args.Length() < 3) {
+        Napi::TypeError::New(env, "Expected tree arguments")
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    if (!args[0].IsNumber() || !args[1].IsNumber() || (!args[2].IsNumber() && !args[2].IsArrayBuffer()) ) {
+        Napi::TypeError::New(env, "Supplied arguments should be: integer, integer, integer/buffer")
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+  
+    int fd = args[0].As<Napi::Number>().Int32Value();
+    int level = args[1].As<Napi::Number>().Int32Value();
+    int optname = args[2].As<Napi::Number>().Int32Value();
+
+    int result = -1;
+
+    if(args[3].IsNumber()){
+        int optval = args[3].As<Napi::Number>().Int32Value();
+        result = setsockopt(fd, level, optname, (char *)& optval, sizeof(optval));
+    }else{
+        Napi::ArrayBuffer buf = args[3].As<Napi::ArrayBuffer>();
+        char* buffer = reinterpret_cast<char*>(buf.Data());
+        result = setsockopt(fd, level, optname, buffer, sizeof(buffer));
+    }
+
+    judge_fn_result(env, result, "setsockopt error");
+
+    return Napi::Number::New(env, result);
+}
+
+
+Napi::Value Getsockopt(const Napi::CallbackInfo& args) {
+    Napi::Env env = args.Env();
+
+    if (args.Length() < 4) {
+        Napi::TypeError::New(env, "Expected tree arguments")
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    if (!args[0].IsNumber() || !args[1].IsNumber() || !args[2].IsNumber() || !args[3].IsNumber() ) {
+        Napi::TypeError::New(env, "Supplied arguments should be: integer, integer, integer, integer")
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    int fd = args[0].As<Napi::Number>().Int32Value();
+    int level = args[1].As<Napi::Number>().Int32Value();
+    int optname = args[2].As<Napi::Number>().Int32Value();
+    int len = args[3].As<Napi::Number>().Int32Value();
+
+    socklen_t default_len = 0;
+    socklen_t * optLen = &default_len;
+    Napi::ArrayBuffer buf;
+
+    if(len == 0){
+        buf = Napi::ArrayBuffer::New(env, 1);
+    }else{
+        buf = Napi::ArrayBuffer::New(env, len);
+    }
+
+    char* buffer = reinterpret_cast<char*>(buf.Data());
+
+    int result = getsockopt(fd, level, optname, (char *)& buffer, optLen);
+
+    judge_fn_result(env, result, "getsockopt error");
+
+    Napi::Object res = Napi::Object::New(env);
+    
+    res.Set(Napi::String::New(env, "result"), Napi::Number::New(env, result));
+    res.Set(Napi::String::New(env, "buffer"), buf);
+    res.Set(Napi::String::New(env, "bufferLen"), Napi::Number::New(env, * optLen) );
+
+    return res;
+}
+
+
+Napi::Value Getsockname(const Napi::CallbackInfo& args) {
+    Napi::Env env = args.Env();
+
+    if (args.Length() < 1) {
+        Napi::TypeError::New(env, "Expected one arguments")
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    if (!args[0].IsNumber() ) {
+        Napi::TypeError::New(env, "Supplied arguments should be: integer")
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    struct sockaddr_in local_sockaddr;
+    socklen_t len = sizeof(local_sockaddr);
+    int id = args[0].As<Napi::Number>().Int32Value();
+
+    int result = getsockname(id,(struct sockaddr *)&local_sockaddr, &len);
+
+    Napi::Object res = Napi::Object::New(env);
+    
+    res.Set(Napi::String::New(env, "result"), Napi::Number::New(env, result));
+    res.Set(Napi::String::New(env, "addr"), addr_to_value(env, local_sockaddr ));
+
+    return res;
 }
 
 Napi::Value Getpeername(const Napi::CallbackInfo& args) {
     Napi::Env env = args.Env();
 
-    if (args.Length() < 2) {
-        Napi::TypeError::New(env, "Expected two arguments")
+    if (args.Length() < 1) {
+        Napi::TypeError::New(env, "Expected one arguments")
                     .ThrowAsJavaScriptException();
             return env.Null();
     }
 
-    if (!args[0].IsNumber() || !args[1].IsObject()) {
-        Napi::TypeError::New(env, "Supplied arguments should be: integer, object")
+    if (!args[0].IsNumber()) {
+        Napi::TypeError::New(env, "Supplied arguments should be: integer")
                     .ThrowAsJavaScriptException();
             return env.Null();
     }
 
-    struct sockaddr_in server_sockaddr =  value_to_addr(args[1]);
+    struct sockaddr_in server_sockaddr;
+    socklen_t len = sizeof(server_sockaddr);
 
     int id = args[0].As<Napi::Number>().Int32Value();
-    socklen_t len = args[2].As<Napi::Number>().Int32Value();
 
     int result = getpeername(id,(struct sockaddr *)&server_sockaddr, &len);
 
-    judge_fn_result(env, result, "getpeername error");
-  
-    return Napi::Number::New(env, result);
+    Napi::Object res = Napi::Object::New(env);
+    
+    res.Set(Napi::String::New(env, "result"), Napi::Number::New(env, result));
+    res.Set(Napi::String::New(env, "addr"), addr_to_value(env, server_sockaddr ));
+
+    return res;
 }
 
 
@@ -676,50 +752,58 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     os_init();
 
     exports.Set(Napi::String::New(env, "_socket"),
-              Napi::Function::New(env, Socket));
+            Napi::Function::New(env, Socket));
     
     exports.Set(Napi::String::New(env, "_bind"),
-              Napi::Function::New(env, Bind));
+            Napi::Function::New(env, Bind));
+
     exports.Set(Napi::String::New(env, "_close"),
-              Napi::Function::New(env, Close));
+            Napi::Function::New(env, Close));
+
+    exports.Set(Napi::String::New(env, "_shutdown"),
+            Napi::Function::New(env, Shutdown));
 
     exports.Set(Napi::String::New(env, "_listen"),
-              Napi::Function::New(env, Listen));
+            Napi::Function::New(env, Listen));
     
     exports.Set(Napi::String::New(env, "_accept"),
-              Napi::Function::New(env, Accept));
+            Napi::Function::New(env, Accept));
               
-
     exports.Set(Napi::String::New(env, "_asyncAccept"),
-              Napi::Function::New(env, AsyncAccept));
+            Napi::Function::New(env, AsyncAccept));
 
     exports.Set(Napi::String::New(env, "_recv"),
-              Napi::Function::New(env, Recv));
+            Napi::Function::New(env, Recv));
               
-
     exports.Set(Napi::String::New(env, "_asyncRecvfrom"),
-              Napi::Function::New(env, AsyncRecvfrom));
+            Napi::Function::New(env, AsyncRecvfrom));
 
     exports.Set(Napi::String::New(env, "_recvfrom"),
-              Napi::Function::New(env, Recvfrom));
+            Napi::Function::New(env, Recvfrom));
 
     exports.Set(Napi::String::New(env, "_sendto"),
-              Napi::Function::New(env, Sendto));
+            Napi::Function::New(env, Sendto));
+
     exports.Set(Napi::String::New(env, "_send"),
-              Napi::Function::New(env, Send));
+            Napi::Function::New(env, Send));
 
     exports.Set(Napi::String::New(env, "_connect"),
-              Napi::Function::New(env, Connect));
+            Napi::Function::New(env, Connect));
+
     exports.Set(Napi::String::New(env, "_asyncRecv"),
-              Napi::Function::New(env, AsyncRecv));
+            Napi::Function::New(env, AsyncRecv));
 
     exports.Set(Napi::String::New(env, "_getsockname"),
-              Napi::Function::New(env, Getsockname));
+            Napi::Function::New(env, Getsockname));
 
     exports.Set(Napi::String::New(env, "_getpeername"),
-              Napi::Function::New(env, Getpeername));
+            Napi::Function::New(env, Getpeername));
+
     exports.Set(Napi::String::New(env, "_setsockopt"),
-              Napi::Function::New(env, Setsockopt));
+            Napi::Function::New(env, Setsockopt));
+
+    exports.Set(Napi::String::New(env, "_getsockopt"),
+            Napi::Function::New(env, Getsockopt));
 
 
 #define NODE_SOCKET_SET_CONSTANT(m,p,v)  NODE_SOCKET_SET_CONSTANT_ENV(env, m, p, v);
