@@ -73,15 +73,21 @@ public:
 
         judge_fn_result(Env(), res, "bind error");
         result = res;
+        client_addr_r = client_addr;
     }
 
     void OnOK() override {
-        Callback().Call({Env().Null(), Napi::Number::New(Env(), result)});
+        Napi::Object res = Napi::Object::New(Env());
+        res.Set(Napi::String::New(Env(), "fd"), Napi::Number::New(Env(), result));
+        res.Set(Napi::String::New(Env(), "addr"), addr_to_value(Env(), client_addr_r ));
+
+        Callback().Call({Env().Null(), res});
     }
 
 private:
     int n_;
     unsigned long long result;
+    struct sockaddr_in client_addr_r;
 };
 
 class RecvAsyncWorker : public Napi::AsyncWorker {

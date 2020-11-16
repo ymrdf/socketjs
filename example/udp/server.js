@@ -1,4 +1,4 @@
-const socket = require('../lib/socket');
+const socket = require('../../lib/socket');
 
 const server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,0);
 const bindResult = server.bind(8888);
