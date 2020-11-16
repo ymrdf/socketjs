@@ -882,15 +882,23 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 #ifdef AF_NETLINK
     /*  */
     NODE_SOCKET_SET_MACRO(env, exports, AF_NETLINK);
+
+#ifdef NETLINK_ROUTE
     NODE_SOCKET_SET_MACRO(env, exports, NETLINK_ROUTE);
+#endif
 #ifdef NETLINK_SKIP
     NODE_SOCKET_SET_MACRO(env, exports, NETLINK_SKIP);
 #endif
 #ifdef NETLINK_W1
     NODE_SOCKET_SET_MACRO(env, exports, NETLINK_W1);
 #endif
+
+#ifdef NETLINK_USERSOCK
     NODE_SOCKET_SET_MACRO(env, exports, NETLINK_USERSOCK);
+#endif
+#ifdef NETLINK_FIREWALL
     NODE_SOCKET_SET_MACRO(env, exports, NETLINK_FIREWALL);
+#endif
 #ifdef NETLINK_TCPDIAG
     NODE_SOCKET_SET_MACRO(env, exports, NETLINK_TCPDIAG);
 #endif
@@ -906,7 +914,9 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 #ifdef NETLINK_ROUTE6
     NODE_SOCKET_SET_MACRO(env, exports, NETLINK_ROUTE6);
 #endif
+#ifdef NETLINK_IP6_FW
     NODE_SOCKET_SET_MACRO(env, exports, NETLINK_IP6_FW);
+#endif
 #ifdef NETLINK_DNRTMSG
     NODE_SOCKET_SET_MACRO(env, exports, NETLINK_DNRTMSG);
 #endif
@@ -932,7 +942,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     NODE_SOCKET_SET_CONSTANT(exports, "VMADDR_PORT_ANY", 0xffffffff);
     NODE_SOCKET_SET_CONSTANT(exports, "VMADDR_CID_HOST", 2);
     NODE_SOCKET_SET_CONSTANT(exports, "VM_SOCKETS_INVALID_VERSION", 0xffffffff);
-    NODE_SOCKET_SET_CONSTANT(exports, "IOCTL_VM_SOCKETS_GET_LOCAL_CID",  _IO(7, 0xb9));
+    // NODE_SOCKET_SET_CONSTANT(exports, "IOCTL_VM_SOCKETS_GET_LOCAL_CID",  _IO(7, 0xb9));
 #endif
 
 #ifdef AF_ROUTE
