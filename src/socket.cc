@@ -171,8 +171,12 @@ Napi::Value Socket(const Napi::CallbackInfo& args) {
         Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
         return env.Null();
     }
-  
-    int fd = socket(args[0].As<Napi::Number>().Int32Value(), args[1].As<Napi::Number>().Int32Value(), htons(args[2].As<Napi::Number>().Int32Value()));
+
+    int domain = args[0].As<Napi::Number>().Int32Value();
+    int type = args[1].As<Napi::Number>().Int32Value();
+    int protocol = args[2].As<Napi::Number>().Int32Value();
+
+    int fd = socket(domain, type, protocol);
 
     if(fd < 0) {
         perror("socket error");
@@ -450,7 +454,7 @@ Napi::Value Sendto(const Napi::CallbackInfo& args) {
 
     int len = sendto(fd, buffer, buflen, flag, (struct sockaddr *)&socket_addr, sizeof(socket_addr));
 
-    judge_fn_result(env, len, "bind error");
+    judge_fn_result(env, len, "sendto error");
 
     return Napi::Number::New(env, len);
 }
