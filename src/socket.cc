@@ -3,20 +3,6 @@
 
 namespace node_socket {
 
-// using v8::Exception;
-// using Nan::FunctionCallbackInfo;
-// using v8::Isolate;
-// using v8::Local;
-// using v8::Object;
-// using v8::Array;
-// using v8::Number;
-// using v8::String;
-// using v8::Value;
-// using v8::Context;
-// using v8::MaybeLocal;
-// using v8::Integer;
-// using v8::Uint32;
-
 sockaddr_in value_to_addr(Napi::Value orgv){
     Napi::Object addr  = orgv.As<Napi::Object>();
 
@@ -709,6 +695,43 @@ Napi::Value Getpeername(const Napi::CallbackInfo& args) {
     return res;
 }
 
+Napi::Value Ioctl(const Napi::CallbackInfo& args) {
+#ifdef SOCKET_OS_WIN
+    Napi::Env env = args.Env();
+
+    if (args.Length() < 3) {
+        Napi::TypeError::New(env, "Expected two arguments")
+                    .ThrowAsJavaScriptException();
+            return env.Null();
+    }
+
+    if (!args[0].IsNumber() || !args[1].IsNumber()) {
+        Napi::TypeError::New(env, "Supplied arguments should be: integer, interger")
+                    .ThrowAsJavaScriptException();
+            return env.Null();
+    }
+
+    int id = args[0].As<Napi::Number>().Int32Value();
+
+    int cmd = args[1].As<Napi::Number>().Int32Value();
+    int option = args[2].As<Napi::Number>().Int32Value();
+
+    DWORD recv;
+
+    switch (cmd) {
+        case SIO_RCVALL: {
+            WSAIoctl(id, cmd, &option, sizeof(option), NULL, 0, &recv, NULL, NULL);
+            return Napi::Number::New(env, recv);
+        }
+        default:
+            return env.Null();
+    }
+#else
+    return env.Null();
+#endif
+}
+
+
 
 #ifdef SOCKET_OS_WIN
 #define OS_INIT_DEFINED
@@ -814,6 +837,9 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 
     exports.Set(Napi::String::New(env, "_getsockopt"),
             Napi::Function::New(env, Getsockopt));
+            
+    exports.Set(Napi::String::New(env, "_ioctl"),
+            Napi::Function::New(env, Ioctl));
 
 
 #define NODE_SOCKET_SET_CONSTANT(m,p,v)  NODE_SOCKET_SET_CONSTANT_ENV(env, m, p, v);
@@ -989,6 +1015,21 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     NODE_SOCKET_SET_MACRO(env, exports, AF_LLC);
 #endif
 
+
+#ifdef SIO_RCVALL
+    NODE_SOCKET_SET_MACRO(env, exports, SIO_RCVALL);
+
+    NODE_SOCKET_SET_MACRO(env, exports, RCVALL_OFF);
+
+    NODE_SOCKET_SET_MACRO(env, exports, RCVALL_ON);
+
+    NODE_SOCKET_SET_MACRO(env, exports, RCVALL_SOCKETLEVELONLY);
+#endif
+
+#ifdef SIO_KEEPALIVE_VALS
+    NODE_SOCKET_SET_MACRO(env, exports, SIO_KEEPALIVE_VALS);
+#endif
+
 #ifdef USE_BLUETOOTH
     NODE_SOCKET_SET_MACRO(env, exports, AF_BLUETOOTH);
     NODE_SOCKET_SET_MACRO(env, exports, BTPROTO_L2CAP);
@@ -1008,6 +1049,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     // PyModule_AddStringConstant(m, "BDADDR_ANY", "00:00:00:00:00:00");
     // PyModule_AddStringConstant(m, "BDADDR_LOCAL", "00:00:00:FF:FF:FF");
 #endif
+
 
 #ifdef AF_CAN
     /* Controller Area Network */
