@@ -113,6 +113,7 @@ server.asyncAccept((error,client) =>{
 tcp/client
 ```js
 const readline = require('readline');
+const socket = require('socket-api');
   
 const stringToUint8Array = (str) => {
   const result = new Uint8Array(str.length).fill(0);
@@ -127,9 +128,6 @@ const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
-
-
-const socket = require('../../lib/socket');
 
 const client = socket.socket(socket.AF_INET,socket.SOCK_STREAM, 0);
 const connectResult = client.connect({port: 8886, address:'172.18.229.69' });
@@ -153,7 +151,7 @@ read();
 
 ## tips
 
-n-socket support IPv4 only;
+socket-api support IPv4 only;
 
 
 

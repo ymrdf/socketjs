@@ -2,7 +2,7 @@
   "name": "socket-api",
   "version": "0.0.1",
   "description": "",
-  "main": "test.js",
+  "main": "./lib/socket.js",
   "dependencies": {
     "bindings": "^1.5.0",
     "nan": "^2.14.1",
@@ -10,10 +10,14 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "install": "node-gyp rebuild"
   },
-  "author": "",
-  "license": "ISC",
+  "repository": "https://github.com/ymrdf/socketjs",
+  "bugs": {
+    "url": "https://github.com/ymrdf/socketjs/issues"
+  },
+  "homepage": "https://github.com/ymrdf/socketjs",
+  "author": "ymrdf",
+  "license": "MIT",
   "gypfile": true
 }
