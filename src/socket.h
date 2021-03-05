@@ -10,6 +10,7 @@
 #include <sys/types.h>
 
 #ifdef SOCKET_OS_WIN
+# include <mstcpip.h> /* for SIO_RCVALL */
 # include <winsock2.h>
 # pragma comment (lib, "ws2_32.lib")  //加载 ws2_32.dll
 #else
