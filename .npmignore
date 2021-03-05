@@ -1,0 +1,12 @@
+.npmignore
+.gitignore
+.editorconfig
+
+node_modules/
+build/
+example
+yarn.lock
+package-lock.json
+Makefile
+
+*.test.js
