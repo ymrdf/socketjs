@@ -12,13 +12,10 @@ server.bind(8886);
 const result = server.listen();
 
 server.asyncAccept((error,client) =>{
-  
   if(error){
     console.log('async accept error:', e);
     return;
   }
-
-  const bf = new Uint8Array(100);
 
   client.asyncRecv(100, 0, (err, result ) => {
     if(err) {

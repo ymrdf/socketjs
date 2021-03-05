@@ -10,7 +10,7 @@ Socket interface for node. It is available on linux, Windows, MacOS, and probabl
 Create a new socket using the given address family, socket type and protocol number. The address family should be AF_INET ,The socket type should be SOCK_STREAM (the default), SOCK_DGRAM, SOCK_RAW or perhaps one of the other SOCK_ constants.The protocol number is usually zero and may be omitted.
 
 ```js
-sock = nsocket.socket(
+sock = socket.socket(
     socket.AF_INET,
     socket.SOCK_STREAM)
 ```
