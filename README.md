@@ -1,4 +1,4 @@
-# n-socket
+# socket-api
 
 Socket interface for node. It is available on linux, Windows, MacOS, and probably additional platforms.
 
@@ -6,7 +6,7 @@ Socket interface for node. It is available on linux, Windows, MacOS, and probabl
 
 ### Creating sockets
 
-#### nsocket.socket(family=AF_INET, type=SOCK_STREAM, proto=0)
+#### socket.socket(family=AF_INET, type=SOCK_STREAM, proto=0)
 Create a new socket using the given address family, socket type and protocol number. The address family should be AF_INET ,The socket type should be SOCK_STREAM (the default), SOCK_DGRAM, SOCK_RAW or perhaps one of the other SOCK_ constants.The protocol number is usually zero and may be omitted.
 
 ```js
