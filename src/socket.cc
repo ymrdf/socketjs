@@ -727,6 +727,7 @@ Napi::Value Ioctl(const Napi::CallbackInfo& args) {
             return env.Null();
     }
 #else
+    Napi::Env env = args.Env();
     return env.Null();
 #endif
 }
